@@ -47,7 +47,6 @@ def single_query():
     if not question:
         return {"success": False, "data": "missing_parameters: question"}    
     llm_response = llm.predict(question)
-    print(llm_response)
     return {"success": True, "data": llm_response}
 
 

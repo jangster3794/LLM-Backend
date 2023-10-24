@@ -76,7 +76,6 @@ def single_query():
 
 @custom_llm_bp.route("/query", methods=["POST"])
 def handle_query():
-    print(vectorstore)
     user_question = json.loads(request.data).get('question')
     conversation_chain = get_conversation_chain_from_vectorstore(vectorstore)
     resp = conversation_chain(user_question)
