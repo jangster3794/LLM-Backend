@@ -20,6 +20,7 @@ llm = OpenAI(temperature=0.9)
 
 vectorstore = None
 
+# Convert PDF to raw text
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
@@ -28,6 +29,7 @@ def get_pdf_text(pdf_docs):
             text += page.extract_text()
     return text
 
+# Text Splitter to create chunks of data
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
         separator="\n",
@@ -38,6 +40,7 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
+# Use FAISS-cpu to create a vector store database to query inputs from custom PDF file
 def get_vectorstore(text_chunks):
     embeddings = OpenAIEmbeddings()
     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
@@ -53,6 +56,7 @@ def get_conversation_chain_from_vectorstore(vectorstore):
     )
     return conversation_chain
 
+# Create a vector store from a PDF file to communicate with
 @custom_llm_bp.route("/create-store", methods=["POST"])
 @cross_origin()
 def single_query():
@@ -74,6 +78,7 @@ def single_query():
     vectorstore = get_vectorstore(text_chunks)
     return {"success": True, "message": "Stored succesfully"}
 
+# Query Input to the custom vectorstore created from create-store API
 @custom_llm_bp.route("/query", methods=["POST"])
 def handle_query():
     user_question = json.loads(request.data).get('question')
