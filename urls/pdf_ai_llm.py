@@ -11,7 +11,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
 
-custom_llm_bp = Blueprint('/custom-llm', __name__)
+pdf_ai_llm = Blueprint('pdf_ai_llm', __name__)
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +19,7 @@ load_dotenv()
 llm = OpenAI(temperature=0.9)
 
 vectorstore = None
+conversation_chain = None
 
 # Convert PDF to raw text
 def get_pdf_text(pdf_docs):
@@ -57,7 +58,7 @@ def get_conversation_chain_from_vectorstore(vectorstore):
     return conversation_chain
 
 # Create a vector store from a PDF file to communicate with
-@custom_llm_bp.route("/create-store", methods=["POST"])
+@pdf_ai_llm.route("/create-store", methods=["POST"])
 @cross_origin()
 def single_query():
     files = request.files.getlist('file')  # 'file' corresponds to the name attribute in the HTML file input element
@@ -76,13 +77,16 @@ def single_query():
     # create vector store
     global vectorstore
     vectorstore = get_vectorstore(text_chunks)
+
+    global conversation_chain
+    conversation_chain = get_conversation_chain_from_vectorstore(vectorstore)
     return {"success": True, "message": "Stored succesfully"}
 
 # Query Input to the custom vectorstore created from create-store API
-@custom_llm_bp.route("/query", methods=["POST"])
+@pdf_ai_llm.route("/query", methods=["POST"])
 def handle_query():
     user_question = json.loads(request.data).get('question')
-    conversation_chain = get_conversation_chain_from_vectorstore(vectorstore)
+    # conversation_chain = get_conversation_chain_from_vectorstore(vectorstore)
     resp = conversation_chain(user_question)
     answer = resp['answer']
     return {"success": True, "data": answer}
